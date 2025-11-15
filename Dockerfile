@@ -1,27 +1,15 @@
-# ==========================
-# Stage 1: Build the JAR file
-# ==========================
-FROM maven:3.9-eclipse-temurin-17 AS builder
-WORKDIR /app
-
-# Copy the pom.xml and source code
+# Build stage
+FROM maven:3.9.4-eclipse-temurin-17 as build
+WORKDIR /build
+# copy pom and source
 COPY pom.xml .
 COPY src ./src
+# package application (creates target/*.jar)
+RUN mvn -B clean package -DskipTests
 
-# Build the application
-RUN mvn clean package -DskipTests
-
-# ==========================
-# Stage 2: Create the runtime image
-# ==========================
-FROM eclipse-temurin:17-jre
+# Runtime stage
+FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
-
-# Copy the built JAR from the builder stage
-COPY --from=builder /app/target/helloservice-0.0.1-SNAPSHOT.jar app.jar
-
-# Expose the default Spring Boot port
+COPY --from=build /build/target/helloservice-0.0.1-SNAPSHOT.jar app.jar
 EXPOSE 8080
-
-# Run the application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java","-jar","/app/app.jar"]
