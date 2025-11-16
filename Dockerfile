@@ -1,15 +1,18 @@
-# Build stage
-FROM maven:3.9.4-eclipse-temurin-17 as build
-WORKDIR /build
-# copy pom and source
-COPY pom.xml .
-COPY src ./src
-# package application (creates target/*.jar)
-RUN mvn -B clean package -DskipTests
-
-# Runtime stage
-FROM eclipse-temurin:17-jre-jammy
+# Use a lightweight Java runtime
+FROM eclipse-temurin:17-jdk-jammy
+# Set working directory
 WORKDIR /app
-COPY --from=build /build/target/helloservice-0.0.1-SNAPSHOT.jar app.jar
+
+# Copy the jar file from "target" into the container
+COPY target/helloservice.jar /app.jar
+
+# Expose the app port
 EXPOSE 8080
-ENTRYPOINT ["java","-jar","/app/app.jar"]
+
+# Set the entrypoint to run the JAR file
+ENTRYPOINT ["java", "-jar", "/app.jar"]
+
+# Run the app with Java
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+FROM openjdk:17-jdk-slim-bullseye
+
